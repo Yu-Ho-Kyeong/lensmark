@@ -4,13 +4,16 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\LensMark;
-
+use App\Models\LensMarkFile;
+use Illuminate\Support\Facades\DB;
 class LensMarkController extends Controller
 {
     private $LensMark;
-    public function __construct(LensMark $LensMark){
+    private $LensMarkFile;
+    public function __construct(LensMark $LensMark, LensMarkFile $LensMarkFile){
         // Laravel 의 IOC(Inversion of Control) 
         $this->LensMark = $LensMark;
+        $this->LensMarkFile = $LensMarkFile;
     }
     /**
      * Display a listing of the resource.
@@ -19,7 +22,13 @@ class LensMarkController extends Controller
      */
     public function index()
     {
-        $LensMarks = $this -> LensMark::all();
+        //$LensMarks = $this -> LensMark::all();
+        $LensMarks = DB::table('lens_marks')
+                    ->join('lens_mark_files', 'lens_marks.id', '=', 'lens_mark_files.mark_no')
+                    ->select('lens_marks.*', 'lens_mark_files.*')
+                    ->get();
+
+        //dd("LensMarks.classification : ", $LensMarks);
         return view('lensMarks.index', compact('LensMarks'));
     }
 

@@ -20,3 +20,5 @@ use App\Http\Controllers\LensMarkController;
 
 Route::get('/', [LensMarkController::class, 'index'])->name('lensMarks.index');
 Route::get('/LensMarks/create', [LensMarkController::class, 'create'])->name('lensMarks.create');
+// Route::get('/header', [LensMarkController::class, 'setHeader'])->name('common.haeder');
+// Route::get('/header', [LensMarkController::class, 'setHeader']);
