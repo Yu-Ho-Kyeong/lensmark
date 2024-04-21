@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\LensMark;
 use App\Models\LensMarkFile;
 use Illuminate\Support\Facades\DB;
+use App\Http\Requests\StoreLensMarkRequest;
+use Illuminate\Support\Facades\Validator;
+
 class LensMarkController extends Controller
 {
     private $LensMark;
@@ -29,7 +32,7 @@ class LensMarkController extends Controller
                     ->get();
 
         //dd("LensMarks.classification : ", $LensMarks);
-        return view('lensMarks.index', compact('LensMarks'));
+        return view('layouts.index', compact('LensMarks'));
     }
 
     /**
@@ -48,9 +51,39 @@ class LensMarkController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(StoreLensMarkRequest $request)
     {
-        //
+
+        // CSRF 토큰 검증
+        $validator = Validator::make($request->all(), [
+            '_token' => 'required|string'
+        ]);
+        if ($validator->fails()) {
+            dd('토큰 검증실패');
+            return response()->json(['success' => false, 'message' => 'CSRF token validation failed'], 403);
+        }else{
+            dd('토큰 검증완료');
+        }
+        $validatedData = $request->validated();                             //lensMark 유효성 검사
+        $lensMark = new LensMark();                                         // 인스턴스 생성
+        $lensMark->classification = $validatedData['classification'];       // 분류
+        $lensMark->manufacturer = $validatedData['manufacturer'];           // 제조사
+        $lensMark->product_name = $validatedData['product_name'];           // 제품명
+        $lensMark->refractive_index = $validatedData['refractive_index'];   // 굴절률
+
+        if($lensMark->save()){
+            $lensMarkFile = new LensMarkFile();
+            $lensMarkFile->link = $validatedData['link'];                   // 제품링크
+            $lensMarkFile->mark_no = $lensMark->id;                         // lensMark id 번호
+            if($lensMarkFile->save()){
+                //return response()->json(['success' => true, 'message' => 'Lens Mark and File created successfully.'], 200);
+                return response()->json( ['success'=>true, 'message'=>'saved successfully'], 500 ); 
+            }else{
+                return response()->json( ['success'=>false, 'message'=>'saved fail'] );
+            }
+        }else{
+            return response()->json( ['success'=>false, 'message', 'saved fail'], 500 );
+        }
     }
 
     /**

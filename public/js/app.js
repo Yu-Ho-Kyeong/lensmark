@@ -38,6 +38,13 @@ window._ = (lodash__WEBPACK_IMPORTED_MODULE_0___default());
 window.axios = axios__WEBPACK_IMPORTED_MODULE_1__["default"];
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
+// CSRF 토큰 설정
+var token = document.head.querySelector('meta[name="csrf-token"]');
+if (token) {
+  window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
+} else {
+  console.error('CSRF 토큰이 발견되지 않았습니다.');
+}
 /**
  * Echo exposes an expressive API for subscribing to channels and listening
  * for events that are broadcast by Laravel. Echo and event broadcasting

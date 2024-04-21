@@ -18,7 +18,6 @@ use App\Http\Controllers\LensMarkController;
 //     return view('welcome');
 // });
 
-Route::get('/', [LensMarkController::class, 'index'])->name('lensMarks.index');
-Route::get('/LensMarks/create', [LensMarkController::class, 'create'])->name('lensMarks.create');
-// Route::get('/header', [LensMarkController::class, 'setHeader'])->name('common.haeder');
-// Route::get('/header', [LensMarkController::class, 'setHeader']);
+Route::get('/', [LensMarkController::class, 'index'])->name('lensMarks.layout');                
+Route::post('/lensMarks/store', [LensMarkController::class, 'store'])->name('lensMarks.store');    // 렌즈마크 등록
+Route::post('/lensMarks/update', [LensMarkController::class, 'update'])->name('lensMarks.update');  // 렌즈마크 수정
