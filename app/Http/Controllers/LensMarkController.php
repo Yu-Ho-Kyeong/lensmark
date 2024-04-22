@@ -94,14 +94,15 @@ class LensMarkController extends Controller
     {
         $LensMark = DB::table('lens_marks')
                     ->join('lens_mark_files', 'lens_marks.id', '=', 'lens_mark_files.mark_no')
+                    ->where('lens_marks.id', $id) // $id에 해당하는 레코드만 선택
                     ->select('lens_marks.*', 'lens_mark_files.*')
                     ->first();
 
-                    if (!$LensMark) {
-                        return response()->json(['message' => 'LensMark not found'], 404);
-                    }
-                
-                    return response()->json($LensMark);
+        if (!$LensMark) {
+            return response()->json(['message' => 'LensMark not found'], 404);
+        }
+        
+        return response()->json($LensMark);
     }
 
     /**

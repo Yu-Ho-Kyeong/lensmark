@@ -18,6 +18,7 @@
         <button @click="modalOpen = true;" data-lensmark-id="{{ $id }}" class="open_modal_btn cursor-pointer px-6 py-3 text-base font-medium text-white rounded-full bg-primary hover:bg-secondary">
             {{ $buttonText ?? 'new' }} 
         </button>
+        <input type="hidden" value="{{ $id }}"/>
     </div>
 
     <div x-show="modalOpen" x-transition class="overflow-x-auto overflow-y-auto fixed top-0 left-0 flex items-center justify-center w-full h-full min-h-screen px-4 py-5 bg-dark/90"
@@ -34,7 +35,7 @@
                 <!-- 분류 -->
                 <div class="mb-4 flex flex-row items-center">
                     <label for="classification" class="flex-shrink-0 block text-base font-medium text-dark dark:text-white text-right mr-2 pr-4 w-1/4">분류:</label>
-                    <input type="text" name="classification" id="classification" class="flex-grow p-2 border-b rounded-md" value="{{ optional($LensMark)->classification }}">
+                    <input type="text" name="classification" id="classification" class="flex-grow p-2 border-b rounded-md" value="{{ $LensMark->manufacturer }}">
                 </div>
 
                 <!-- 제조사 -->
@@ -143,35 +144,34 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
     // 모달 열기 버튼에 클릭 이벤트 리스너 추가
-        document.querySelectorAll('.open_modal_btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                const id = this.getAttribute('data-lensmark-id');
-                if(id){
-                    console.log('id : ' , id);
-                    getLensMark(id);
-                }
-                
-                
-                // 여기서 필요한 작업을 수행할 수 있습니다.
-                // 예: 모달 열기, AJAX 요청 등
-                // 예시에서는 아무런 작업을 수행하지 않고 있습니다.
-            });
+    document.querySelectorAll('.open_modal_btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            let lensMarkId = this.getAttribute('data-lensmark-id');
+            
+            if(lensMarkId){
+                console.log('id : ', lensMarkId);
+                getLensMark(lensMarkId);
+            }
         });
     });
+});
 
     
     function getLensMark(id){
         let endpoint = '';
         if(id){
-            endpoint = '/lensMarks/show' + '/' + id;
+            endpoint = '/lensMarks/show'+'/'+id;
+            console.log('endpoint : ', endpoint);
         }
 
         axios.get(endpoint)
             .then(function(res){
                 console.log('res.data : ' , res.data);
-
+                
                 // 데이터를 받아온 후에 화면에 출력
                 document.getElementById('classification').value = res.data.classification;
+                console.log("document.getElementById('classification').value", document.getElementById('classification').value);
+                console.log("document.getElementById('classification')", document.getElementById('classification'));
                 document.getElementById('manufacturer').value = res.data.manufacturer;
                 document.getElementById('product_name').value = res.data.product_name;
                 document.getElementById('refractive_index').value = res.data.refractive_index;
