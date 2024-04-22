@@ -1,16 +1,21 @@
 @php
     $LensMark = $LensMark ?? null;
     $buttonText = $buttonText ?? "new";
+    $id = $id ?? "";
     if($buttonText){
         //echo('lensmark : '. var_dump($LensMark));
         echo('buttonText : '. $buttonText);
+    }
+
+    if($id){
+        echo 'id ididid: ',$id;
     }
     
 @endphp
 <section x-data="{modalOpen: false}" class="save-modal-section">
 
     <div class="container py-5 mx-auto">
-        <button @click="modalOpen = true;" class="open_modal_btn cursor-pointer px-6 py-3 text-base font-medium text-white rounded-full bg-primary hover:bg-secondary">
+        <button @click="modalOpen = true;" data-lensmark-id="{{ $id }}" class="open_modal_btn cursor-pointer px-6 py-3 text-base font-medium text-white rounded-full bg-primary hover:bg-secondary">
             {{ $buttonText ?? 'new' }} 
         </button>
     </div>
@@ -122,7 +127,7 @@
                     @endisset
 
                     <div>
-                        <button type="button" onclick="goAction('{{ $buttonText }}')" class="save_btn cursor-pointer mr-2 px-6 py-3 text-base font-medium text-white rounded-full bg-primary hover:bg-secondary">
+                    <button type="button" onclick="goAction('{{ $buttonText }}', '{{ $id }}')" class="save_btn cursor-pointer mr-2 px-6 py-3 text-base font-medium text-white rounded-full bg-primary hover:bg-secondary">
                         <!-- <button type="submit" class="save_btn cursor-pointer px-6 py-3 text-base font-medium text-white rounded-full bg-primary hover:bg-secondary"> -->
                         <!-- <button type="submit" class="p-4 text-base font-medium text-center text-white transition border-b rounded-md border-b-primary bg-primary hover:bg-blue-dark"> -->
                             Save
@@ -133,3 +138,110 @@
         </div>
     </div>
 </section>
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    // 모달 열기 버튼에 클릭 이벤트 리스너 추가
+        document.querySelectorAll('.open_modal_btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-lensmark-id');
+                if(id){
+                    console.log('id : ' , id);
+                    getLensMark(id);
+                }
+                
+                
+                // 여기서 필요한 작업을 수행할 수 있습니다.
+                // 예: 모달 열기, AJAX 요청 등
+                // 예시에서는 아무런 작업을 수행하지 않고 있습니다.
+            });
+        });
+    });
+
+    
+    function getLensMark(id){
+        let endpoint = '';
+        if(id){
+            endpoint = '/lensMarks/show' + '/' + id;
+        }
+
+        axios.get(endpoint)
+            .then(function(res){
+                console.log('res.data : ' , res.data);
+
+                // 데이터를 받아온 후에 화면에 출력
+                document.getElementById('classification').value = res.data.classification;
+                document.getElementById('manufacturer').value = res.data.manufacturer;
+                document.getElementById('product_name').value = res.data.product_name;
+                document.getElementById('refractive_index').value = res.data.refractive_index;
+                document.getElementById('keyword').value = res.data.keyword;
+                document.getElementById('link').value = res.data.link;
+
+                // 제품마크 이미지 처리 (추가적인 로직이 필요함)
+                // document.getElementById('product_mark1').src = res.data.product_mark1;
+                // document.getElementById('product_mark2').src = res.data.product_mark2;
+
+            }).catch(function(err){
+                console.error('Error fetching lens mark data:', err);
+            });
+    }
+
+    
+    function goAction(buttonText, id) { 
+        // const endpoint = buttonText === "modify" ? '/lensMarks/update' : '/lensMarks/store'; 
+        //console.log('endpoint : ', endpoint);
+        let endpoint=''; 
+        if(id){
+            endpoint = '/lensMarks/update' + '/' + id;
+            console.log('endpoint : ', endpoint);
+        }else{
+            endpoint = '/lensMarks/store';
+            console.log('endpoint : ', endpoint);
+        }
+        
+            //const formData = new FormData(form);
+            const lensData = {
+                'classification':document.getElementById('classification').value,
+                'manufacturer':document.getElementById('manufacturer').value,
+                'product_name':document.getElementById('product_name').value,
+                'refractive_index':document.getElementById('refractive_index').value,
+                'keyword':document.getElementById('keyword').value,
+                'link':document.getElementById('link').value
+            }
+            console.log('flensDataorm : ', JSON.stringify(lensData));
+
+            axios.post(endpoint, lensData, {
+                    headers : {
+                      'Content-Type' : 'application/json',
+                    }
+                  })
+            .then(function(res){
+                console.log('res.data : ' , res.data);
+            })
+            .catch(function(err, res){
+                console.log('err: ', err);
+                if (err.message.indexOf('Network Error') > -1) {
+                      alert('네트워크가 원활하지 않습니다.\n잠시 후 다시 시도해주세요.')
+                    }else if(err.response && err.response.status === 500){
+                      alert('server error');
+                    }else if(err.response && err.response.status === 403){
+                        alert('권한이 없습니다. 관리자에게 문의해주세요');
+                    }else if(err.response && err.response.status === 422){
+                        const errors = err.response.data.errors;
+                        const keys = Object.keys(errors);
+                        
+                        keys.forEach(key => {
+                            const messages = errors[key];
+
+                            // 배열의 첫 번째 message만 출력합니다.
+                            const firstMessage = messages[0];
+                            if (firstMessage) {
+                                alert(firstMessage);
+                            }
+                        });
+                    }
+            });
+    };
+</script>
+@endsection

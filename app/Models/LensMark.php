@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class LensMark extends Model
 {
     use HasFactory;
+    public $timestamps = false;
     protected $table = 'lens_marks';
     protected $fillable = [
         'classification',

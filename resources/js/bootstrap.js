@@ -16,6 +16,7 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 let token = document.head.querySelector('meta[name="csrf-token"]');
 if (token) {
     window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
+    console.error('CSRF 토큰이 발견.', window.axios.defaults.headers.common['X-CSRF-TOKEN']);
 } else {
     console.error('CSRF 토큰이 발견되지 않았습니다.');
 }

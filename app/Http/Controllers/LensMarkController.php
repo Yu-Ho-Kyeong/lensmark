@@ -8,6 +8,7 @@ use App\Models\LensMarkFile;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\StoreLensMarkRequest;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class LensMarkController extends Controller
 {
@@ -42,7 +43,8 @@ class LensMarkController extends Controller
      */
     public function create()
     {
-        return view('lensMarks.create');
+        dd('test');
+        return view('layouts.index');
     }
 
     /**
@@ -52,39 +54,35 @@ class LensMarkController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(StoreLensMarkRequest $request)
-    {
+{
+    try {
+        $validatedData = $request->validated(); // 유효성 검사
 
-        // CSRF 토큰 검증
-        $validator = Validator::make($request->all(), [
-            '_token' => 'required|string'
-        ]);
-        if ($validator->fails()) {
-            dd('토큰 검증실패');
-            return response()->json(['success' => false, 'message' => 'CSRF token validation failed'], 403);
-        }else{
-            dd('토큰 검증완료');
-        }
-        $validatedData = $request->validated();                             //lensMark 유효성 검사
-        $lensMark = new LensMark();                                         // 인스턴스 생성
-        $lensMark->classification = $validatedData['classification'];       // 분류
-        $lensMark->manufacturer = $validatedData['manufacturer'];           // 제조사
-        $lensMark->product_name = $validatedData['product_name'];           // 제품명
-        $lensMark->refractive_index = $validatedData['refractive_index'];   // 굴절률
-
-        if($lensMark->save()){
+        $lensMark = new LensMark(); // 인스턴스 생성
+        $lensMark->classification = $validatedData['classification']; // 분류
+        $lensMark->manufacturer = $validatedData['manufacturer']; // 제조사
+        $lensMark->product_name = $validatedData['product_name']; // 제품명
+        $lensMark->refractive_index = $validatedData['refractive_index']; // 굴절률
+        $lensMark->keyword = $validatedData['keyword']; // 검색어
+            
+        if ($lensMark->save()) {
             $lensMarkFile = new LensMarkFile();
-            $lensMarkFile->link = $validatedData['link'];                   // 제품링크
-            $lensMarkFile->mark_no = $lensMark->id;                         // lensMark id 번호
-            if($lensMarkFile->save()){
-                //return response()->json(['success' => true, 'message' => 'Lens Mark and File created successfully.'], 200);
-                return response()->json( ['success'=>true, 'message'=>'saved successfully'], 500 ); 
-            }else{
-                return response()->json( ['success'=>false, 'message'=>'saved fail'] );
+            $lensMarkFile->link = $validatedData['link']; // 제품링크
+            $lensMarkFile->mark_no = $lensMark->id; // lensMark id 번호
+            $lensMarkFile->created_at = now();
+            
+            if ($lensMarkFile->save()) {
+                return response()->json(['success' => true, 'message' => 'Lens Mark and File created successfully.'], 200);
+            } else {
+                return response()->json(['success' => false, 'message' => 'Saved fail'], 500);
             }
-        }else{
-            return response()->json( ['success'=>false, 'message', 'saved fail'], 500 );
+        } else {
+            return response()->json(['success' => false, 'message' => 'Lens Mark saved fail'], 500);
         }
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => 'An error occurred while saving Lens Mark and File.'], 500);
     }
+}
 
     /**
      * Display the specified resource.
@@ -94,7 +92,16 @@ class LensMarkController extends Controller
      */
     public function show($id)
     {
-        //
+        $LensMark = DB::table('lens_marks')
+                    ->join('lens_mark_files', 'lens_marks.id', '=', 'lens_mark_files.mark_no')
+                    ->select('lens_marks.*', 'lens_mark_files.*')
+                    ->first();
+
+                    if (!$LensMark) {
+                        return response()->json(['message' => 'LensMark not found'], 404);
+                    }
+                
+                    return response()->json($LensMark);
     }
 
     /**
@@ -115,9 +122,32 @@ class LensMarkController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(StoreLensMarkRequest $request, $id)
     {
-        //
+        try{
+            $lensMark = LensMark::find($id); // 특정 LensMark를 찾습니다.
+    
+            if (!$lensMark) {
+                return response()->json(['success' => false, 'message' => 'LensMark not found'], 404);
+            }
+            
+            $validatedData = $request->validated(); // 유효성 검사
+            
+            $lensMark->classification = $validatedData['classification'];
+            $lensMark->manufacturer = $validatedData['manufacturer'];
+            $lensMark->product_name = $validatedData['product_name'];
+            $lensMark->refractive_index = $validatedData['refractive_index'];
+            $lensMark->keyword = $validatedData['keyword'];
+            
+            if ($lensMark->save()) {
+                return response()->json(['success' => true, 'message' => 'LensMark updated successfully'], 200);
+            } else {
+                return response()->json(['success' => false, 'message' => 'LensMark update failed'], 500);
+            }
+        }catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'An error occurred while saving Lens Mark and File.'], 500);
+        }
+        
     }
 
     /**

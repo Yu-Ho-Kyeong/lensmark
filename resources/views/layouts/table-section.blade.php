@@ -88,7 +88,8 @@
                            @endif
                            </td>
                            <td class="text-dark border-b border-r border-[#E8E8E8] bg-white dark:border-dark dark:bg-dark-2 dark:text-dark-7 py-5 px-2 text-center text-base font-medium">
-                              @include('layouts.modal', ['buttonText' => 'modify'], ['LensMark'=> $LensMark])
+                              @include('layouts.modal', ['buttonText' => 'modify'], ['id'=> $LensMark->id])
+                              
                            </td>
                         </tr> 
                   @endforeach
